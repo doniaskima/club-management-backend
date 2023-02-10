@@ -6,6 +6,9 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    phone: {
+        type: Number,
+    },
     username: {
         type: String,
         trim: true,
@@ -28,7 +31,7 @@ const userSchema = new mongoose.Schema({
     profileUrl: {
         type: String,
     },
-    
+
 }, { timestamps: true });
 
 const User = mongoose.model("users", userSchema);

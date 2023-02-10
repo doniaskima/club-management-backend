@@ -38,7 +38,7 @@ const login = async(req, res) => {
 };
 
 const signup = async(req, res) => {
-    const { name, username, email, password } = req.body;
+    const { name, phone, email, password } = req.body;
     let user = await User.findOne({ email: email }).catch((err) => {
         console.log(err);
     });
@@ -65,7 +65,7 @@ const signup = async(req, res) => {
         const hashedPassword = await bcrypt.hash(password, 10);
         const newUser = new User({
             name: name,
-            username: username,
+            phone: phone,
             email: email,
             password: hashedPassword,
             bio: "Hi there!  welcome to Donia's Twitter clone",
