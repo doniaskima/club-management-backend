@@ -7,6 +7,7 @@ const morgan = require("morgan");
 const helmet = require("helmet");
 const compression = require("compression");
 const userRouter = require("./routes/user.route");
+const cors = require("cors");
 
 //DB connection
 mongoose.connect(process.env.MONGO_DB_URI);
@@ -23,6 +24,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(morgan("dev"));
 app.use(helmet());
+app.use(cors());
 app.use(compression());
 
 //routes middleware

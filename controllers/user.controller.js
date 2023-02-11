@@ -4,6 +4,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { extend } = require("lodash");
 
+
 const login = async(req, res) => {
     const { email, password } = req.body;
     const user = await User.findOne({ email: email }).catch((err) => {
@@ -38,7 +39,7 @@ const login = async(req, res) => {
 };
 
 const signup = async(req, res) => {
-    const { name, phone, email, password } = req.body;
+    const { name, username, email, password } = req.body;
     let user = await User.findOne({ email: email }).catch((err) => {
         console.log(err);
     });
@@ -65,7 +66,7 @@ const signup = async(req, res) => {
         const hashedPassword = await bcrypt.hash(password, 10);
         const newUser = new User({
             name: name,
-            phone: phone,
+            username: username,
             email: email,
             password: hashedPassword,
             bio: "Hi there!  welcome to Donia's Twitter clone",
@@ -93,10 +94,7 @@ const signup = async(req, res) => {
         });
     }
 };
-
-
 module.exports = {
     login,
     signup,
-
 };
