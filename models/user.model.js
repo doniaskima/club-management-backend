@@ -28,7 +28,17 @@ const userSchema = new mongoose.Schema({
     profileUrl: {
         type: String,
     },
-
+    img_url: String,
+    cloudinary_id: String,
+    isblocked: {
+        type: Boolean,
+        default: false,
+    },
+    facebook: String,
+    clubs: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "club",
+    }, ],
 }, { timestamps: true });
 
 const User = mongoose.model("users", userSchema);
