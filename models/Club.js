@@ -39,7 +39,7 @@ const clubSchema = new mongoose.Schema({
         type: Boolean,
         default: false,
     },
-});
+}, { timestamps: true });
 
 const Club = mongoose.model("club", clubSchema);
 module.exports = Club;

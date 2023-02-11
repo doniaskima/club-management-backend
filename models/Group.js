@@ -9,9 +9,9 @@ const groupSchema = new mongoose.Schema({
     },
     members: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: "user"
-    }],
-});
+        ref: "user",
+    }, ],
+}, { timestamps: true });
 
 
 const Group = mongoose.model("group", groupSchema);
