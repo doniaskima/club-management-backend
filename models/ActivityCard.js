@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const Activity = require("./Activity");
-const cloudinary = require("../helper/Cloudinary");
 const async = require("async");
+const cloudinary = require("../helper/Cloudinary");
 const { isElementInArray } = require("../helper/ArrayHelper");
 
 const activityCardSchema = new mongoose.Schema({
@@ -41,7 +41,6 @@ const activityCardSchema = new mongoose.Schema({
     },
 }, { timestamps: true });
 
-
 activityCardSchema.pre("remove", function(next) {
     var card = this;
 
@@ -64,7 +63,6 @@ activityCardSchema.pre("remove", function(next) {
 
     next();
 });
-
 
 const ActivityCard = mongoose.model("activityCards", activityCardSchema);
 module.exports = ActivityCard;
