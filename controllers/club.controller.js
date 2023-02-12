@@ -104,3 +104,115 @@ module.exports.getList = async(req, res) => {
         res.status(500).json({ clubs: "none" });
     }
 };
+
+module.exports.getListNotJoin = async(req, res) => {
+    const userId = req.params.userId;
+    const { isblocked } = req.query;
+
+    let query = {
+        $nor: [{ members: userId }, { leader: userId }, { treasurer: userId }],
+    };
+
+    if (isblocked !== undefined) {
+        if (Array.isArray(isblocked)) {
+            query = {...query, isblocked: { $in: isblocked } };
+        } else {
+            query = {...query, isblocked: isblocked };
+        }
+    }
+
+    const clubs = await Club.find(query).populate("leader").populate("treasurer");
+
+    if (clubs.length) {
+        res.status(200).send(ConvertClubs(clubs));
+    } else {
+        res.status(500).json({ clubs: "none" });
+    }
+};
+
+module.exports.getOne = async(req, res) => {
+    const clubId = req.params.clubId;
+
+    Club.findById(clubId)
+        .populate("leader")
+        .populate("treasurer")
+        .then((result) => {
+            res.status(200).send(ConvertClub(result));
+        })
+        .catch((err) => {
+            res.status(500).json({ error: err.message });
+        });
+};
+
+module.exports.getMembers = async(req, res) => {
+    const clubId = req.params.clubId;
+
+    Club.findById(clubId)
+        .then((club) => {
+            User.find({ _id: { $in: club.members } })
+                .then((users) => {
+                    res.status(200).send(ConvertUsers(users));
+                })
+                .catch((err) => {
+                    res.status(500).json({ error: err.message });
+                });
+        })
+        .catch((err) => {
+            res.status(500).json({ error: err.message });
+        });
+};
+
+module.exports.getUsersNotMembers = async(req, res) => {
+    const clubId = req.params.clubId;
+    try {
+        const club = await Club.findById(clubId);
+        const users = await User.find({
+            $and: [
+                { _id: { $nin: club.members } },
+                { _id: { $nin: [club.leader, club.treasurer] } },
+                { username: { $nin: ["admin", "admin0"] } },
+            ],
+        }).limit(20);
+        res.status(200).send(ConvertUsers(users));
+    } catch (err) {
+        res.status(500).send({ error: err.message });
+    }
+};
+
+module.exports.search = async(req, res) => {
+    const encodedSearchValue = req.params.searchValue;
+    const buff = Buffer.from(encodedSearchValue, "base64");
+    const searchValue = buff.toString("utf8");
+
+    await Club.find({
+            name: { $regex: searchValue },
+        })
+        .then((clubs) => {
+            res.status(200).send(ConvertClubs(clubs));
+        })
+        .catch((err) => {
+            console.log(err);
+            res.status(500).send({ error: err.message });
+        });
+};
+
+module.exports.userSearch = (req, res) => {
+    const userId = req.params.userId;
+    const encodedSearchValue = req.params.searchValue;
+    const buff = Buffer.from(encodedSearchValue, "base64");
+    const searchValue = buff.toString("utf8");
+
+    User.findById(userId).then((user) => {
+        Club.find({
+                $and: [{ name: { $regex: searchValue } }, { _id: { $in: user.clubs } }],
+            })
+            .populate("leader")
+            .populate("treasurer")
+            .then((clubs) => {
+                res.status(200).send(ConvertClubs(clubs));
+            })
+            .catch((err) => {
+                res.status(500).send({ error: err.message });
+            });
+    });
+};
