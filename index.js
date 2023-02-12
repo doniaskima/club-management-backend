@@ -1,13 +1,20 @@
 //import section
 require("dotenv").config();
 const express = require("express");
-const app = express();
+const cookieParser = require("cookie-parser");
 const mongoose = require("mongoose");
 const morgan = require("morgan");
 const helmet = require("helmet");
 const compression = require("compression");
 const userRouter = require("./routes/user.route");
 const cors = require("cors");
+const socketio = require("socket.io");
+const app = express();
+
+//Routes 
+const clubRoutes = require("./routes/club.route");
+
+
 
 //DB connection
 mongoose.connect(process.env.MONGO_DB_URI);
@@ -20,14 +27,16 @@ mongoose.connection.on("error", (err) => {
 //import routes
 
 //middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-app.use(morgan("dev"));
-app.use(helmet());
+const http = require("http").createServer(app);
+const io = socketio(http);
+const dotenv = require("dotenv");
+dotenv.config();
 app.use(cors());
-app.use(compression());
+app.use(express.json());
+app.use(cookieParser());
 
-//routes middleware
+//usee Routes
+app.use("/club", clubRoutes);
 
 app.get("/", (req, res) => {
     return res.send({ message: "Welcome :D" });
@@ -36,8 +45,8 @@ app.get("/", (req, res) => {
 app.use("/users", userRouter);
 
 //server listening
-const port = 8000;
+const PORT = process.env.PORT || 3000;
 
-app.listen(port, () => {
-    console.log(`Example app listening on port ${port}`);
+app.listen(PORT, () => {
+    console.log(`app listening on port ${PORT}`);
 });

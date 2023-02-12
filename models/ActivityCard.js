@@ -18,15 +18,15 @@ const activityCardSchema = new mongoose.Schema({
         original_filename: String,
         url: String,
         public_id: String,
-    }, ],
+    }],
     userJoin: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: "user",
-    }, ],
+    }],
     groupJoin: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: "group",
-    }, ],
+    }],
     comments: [{
         content: String,
         createdAt: Date,
@@ -34,7 +34,7 @@ const activityCardSchema = new mongoose.Schema({
             type: mongoose.Schema.Types.ObjectId,
             ref: "user",
         },
-    }, ],
+    }],
     pointValue: {
         type: Number,
         default: 0,
@@ -43,7 +43,6 @@ const activityCardSchema = new mongoose.Schema({
 
 activityCardSchema.pre("remove", function(next) {
     var card = this;
-
     async.forEach(
         card.files,
         async function(item, callback) {
