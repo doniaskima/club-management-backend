@@ -1,3 +1,9 @@
+const {
+    ConvertClub,
+    ConvertClubs,
+    ConvertUser,
+    ConvertUsers,
+} = require("../helper/ConvertDataHelper");
 const fs = require("fs");
 const Buffer = require("buffer").Buffer;
 const mongoose = require("mongoose");
@@ -69,10 +75,12 @@ module.exports.createClub = async(req, res) => {
 module.exports.verifyclub = async(req, res, next) => {
     const club_id = req.params.club_id;
 
-    const club = await Club.findById(club_id).populate("leader").populate("treasurer")
+    const club = await Club.findById(club_id)
+        .populate("leader")
+        .populate("treasurer");
 
     if (club) {
-        console.log(club)
+        console.log(club);
         if (club.isblocked) {
             res.status(400).json({ club: "blocked" });
         } else {
@@ -81,4 +89,18 @@ module.exports.verifyclub = async(req, res, next) => {
     } else {
         res.status(400).json({ club: "none" });
     }
-}
+};
+
+module.exports.getList = async(req, res) => {
+    const userId = req.params.userId;
+    let query = {
+        $or: [{ members: userId }, { leader: userId }, { treasurer: userId }],
+    };
+    const clubs = await Club.find(query).populate("leader").populate("treasurer");
+
+    if (clubs.length) {
+        res.status(200).send(ConvertClubs(clubs));
+    } else {
+        res.status(500).json({ clubs: "none" });
+    }
+};

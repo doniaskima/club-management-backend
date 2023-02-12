@@ -5,6 +5,6 @@ const router = Router();
 
 
 router.post("/create", upload.array("file"), clubController.createClub);
-
+router.get("/list/:userId", clubController.getList);
 
 module.exports = router;
