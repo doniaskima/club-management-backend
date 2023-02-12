@@ -6,4 +6,5 @@ const router = Router();
 
 router.post("/create", upload.array("file"), clubController.createClub);
 
+
 module.exports = router;

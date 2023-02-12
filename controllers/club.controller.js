@@ -10,7 +10,7 @@ const FundHistory = require("../models/FundHistory");
 const Group = require("../models/Group");
 const { saveLog } = require("../helper/LogHelper");
 
-const createClub = async(req, res) => {
+module.exports.createClub = async(req, res) => {
     const files = req.files;
     const { name, description, leader, treasurer } = req.body;
     let img_url = "";
@@ -65,6 +65,20 @@ const createClub = async(req, res) => {
         res.status(500).send({ error: err.message });
     }
 };
-module.exports = {
-    createClub,
-};
+
+module.exports.verifyclub = async(req, res, next) => {
+    const club_id = req.params.club_id;
+
+    const club = await Club.findById(club_id).populate("leader").populate("treasurer")
+
+    if (club) {
+        console.log(club)
+        if (club.isblocked) {
+            res.status(400).json({ club: "blocked" });
+        } else {
+            res.status(200).json(club);
+        }
+    } else {
+        res.status(400).json({ club: "none" });
+    }
+}
