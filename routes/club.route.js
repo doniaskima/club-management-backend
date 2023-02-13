@@ -14,4 +14,5 @@ router.get(
   "/searchUsersNotMembers/:clubId/:searchValue",
   clubController.searchUsersNotMembers
 );
+router.patch("/removemembers/:clubId", clubController.removeMembers);
 module.exports = router;
