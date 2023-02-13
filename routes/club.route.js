@@ -10,5 +10,6 @@ router.get("/listnotjoin/:userId", clubController.getListNotJoin);
 router.get("/one/:clubId", clubController.getOne);
 router.get("/search/:searchValue", clubController.search);
 router.get("/usersearch/:userId/:searchValue", clubController.userSearch);
+router.get("/searchMember/:clubId", clubController.searchMembers);
 
 module.exports = router;
