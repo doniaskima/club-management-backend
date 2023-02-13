@@ -349,6 +349,66 @@ module.exports.removeMembers = async (req, res) => {
   } catch (err) {
     console.log(err);
     res.status(500).send({ error: err.message });
+  }
+};
+
+module.exports.updateFundConfig = async (req, res) => {
+  const clubId = req.params.clubId;
+  const { monthlyFund, monthlyFundPoint } = req.body;
+  try {
+    let club = await Club.findById(clubId);
+    club.monthlyFund = monthlyFund;
+    club.monthlyFundPoint = monthlyFundPoint;
+    const savedClub = await club.save();
+    const result = await savedClub
+      .populate("leader")
+      .populate("treasurer")
+      .execPopulate();
+    res.status(200).send(result);
+  } catch (err) {
     res.status(500).send({ error: err.message });
   }
+};
+
+module.exports.removeMember = async (req, res) => {
+  const clubId = req.params.clubId;
+  const { userId } = req.body;
+
+  await Club.findById(clubId, async function (err, doc) {
+    if (err) {
+      res.status(500).send({ error: err.message });
+      return;
+    }
+    const newMembers = doc.members.filter(function (value, index, arr) {
+      return value.toString() !== userId;
+    });
+    doc.members = newMembers;
+    doc.save();
+    await saveLog(clubId, "member_out", userId);
+
+    User.findById(userId, function (err, doc) {
+      if (err) {
+        res.status(500).send({ error: err.message });
+        return;
+      }
+      const newClubs = doc.clubs.filter(function (value, index, arr) {
+        return value.toString() != clubId;
+      });
+      doc.clubs = newClubs;
+      doc
+        .save()
+        .then((user) => {
+          res.status(200).send(ConvertUser(user));
+        })
+        .catch((err) => {
+          console.log(err);
+          res.status(500).send({ error: err.message });
+        });
+    }).catch((err) => {
+      res.status(500).send({ error: err.message });
+    });
+  }).catch((err) => {
+    console.log(err);
+    res.status(400).send({ error: err.message });
+  });
 };
