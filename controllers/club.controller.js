@@ -196,7 +196,7 @@ module.exports.search = async (req, res) => {
     });
 };
 
-module.exports.userSearch = (req, res) => {
+module.exports.userSearch = async (req, res) => {
   const userId = req.params.userId;
   const encodedSearchValue = req.params.searchValue;
   const buff = Buffer.from(encodedSearchValue, "base64");
@@ -217,7 +217,7 @@ module.exports.userSearch = (req, res) => {
   });
 };
 
-module.exports.searchMembers = (req, res) => {
+module.exports.searchMembers = async (req, res) => {
   const clubId = req.params.clubId;
   const encodedSearchValue = req.params.searchValue;
   const buff = Buffer.from(encodedSearchValue, "base64");
@@ -242,6 +242,37 @@ module.exports.searchMembers = (req, res) => {
     })
     .catch((err) => {
       console.log(err);
-      res.status(500).send({ error: error.message });
+      res.status(500).send({ error: err.message });
     });
+};
+
+module.exports.searchUsersNotMembers = async (req, res) => {
+  const clubId = req.params.clubId;
+  const encodedSearchValue = req.params.searchValue;
+  const buff = Buffer.from(encodedSearchValue, "base64");
+  const searchValue = buff.toString("utf8");
+
+  Club.findById(clubId).then((club) => {
+    User.find((club) => {
+      $and: [
+        { _id: { nin: club.members } },
+        { _id: { $nin: [club.leader, club.treasurer] } },
+        { username: { $nin: ["admin", "admin0"] } },
+      ];
+      $or: [
+        { username: { $regex: searchValue } },
+        { name: { $regex: searchValue } },
+        { email: { $regex: searchValue } },
+      ];
+    })
+      .limit(20)
+      .then((users) => {
+        res.status(200).send(ConvertUsers(users));
+      })
+
+      .catch((err) => {
+        console.log(err);
+        res.status(400).send({ error: err.message });
+      });
+  });
 };
