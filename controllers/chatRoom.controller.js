@@ -85,8 +85,50 @@ module.exports = function(socket, io) {
                 })
         })
     })
-}
 
-async function getListRoomId(userId) {
+    socket.on('sendMessage', async(
+        user_id, type, iginalfilename, content, room_id, callback
+    ) => {
+        try {
+            let roomId = room_id;
+            let spliRoomId = room_id.split('_');
+            if (splitRoomId.length > 1) {
+                const roomIdArr = [
+                    splitRoomId[0] + "_" + splitRoomId[1],
+                    splitRoomId[1] + "_" + splitRoomId[0]
+                ]
+                const rooms = await ChatRoom.find({ room_id: { $in: roomIdArr } })
+                if (rooms.length > 0) {
+                    roomId = rooms[0].room_id;
+                } else {
+                    console.log("not found");
+                    const newRoom = await ChatRoom.create({ room_id })
+                    roomId = newRoom.room_id;
+                    io.emit("chat-room-created", roomId)
+                    socket.join(roomId);
+                }
+            }
+            const msgToStore = {
+                author: user_id,
+                type,
+                original_filename,
+                content,
+                room_id: roomId,
+            }
 
+            const msg = new Message(msgToStore);
+            msg.save().then(m =>
+                m.populate('author')
+                .execPopulate()
+                .then(async(result) => {
+                    //console.log('send mess', result)
+                    io.to(roomId).emit('message', result);
+                    io.emit('reload-list-room', result)
+                    callback();
+                })
+            )
+        } catch (err) {
+            console.log(err);
+        }
+    })
 }
