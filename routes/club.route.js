@@ -5,6 +5,7 @@ const router = Router();
 
 router.post("/create", upload.array("file"), clubController.createClub);
 router.get("/list/:userId", clubController.getList);
+router.get("/members/:clubId", clubController.getMembersJoinLogs);
 router.get("/listnotjoin/:userId", clubController.getListNotJoin);
 router.get("/one/:clubId", clubController.getOne);
 router.get("/search/:searchValue", clubController.search);
@@ -17,4 +18,6 @@ router.get(
 router.patch("/block/:clubId", clubController.block);
 router.patch("/update/:clubId", clubController.update);
 router.patch("/removemembers/:clubId", clubController.removeMembers);
+router.delete("/delete/:clubId/:cloudId", clubController.delete);
+
 module.exports = router;
