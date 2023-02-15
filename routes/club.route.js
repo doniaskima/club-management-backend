@@ -11,8 +11,10 @@ router.get("/search/:searchValue", clubController.search);
 router.get("/usersearch/:userId/:searchValue", clubController.userSearch);
 router.get("/searchmembers/:clubId/:searchValue", clubController.searchMembers);
 router.get(
-  "/searchUsersNotMembers/:clubId/:searchValue",
-  clubController.searchUsersNotMembers
+    "/searchUsersNotMembers/:clubId/:searchValue",
+    clubController.searchUsersNotMembers
 );
+router.patch("/block/:clubId", clubController.block);
+router.patch("/update/:clubId", clubController.update);
 router.patch("/removemembers/:clubId", clubController.removeMembers);
 module.exports = router;
