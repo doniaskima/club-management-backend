@@ -5,5 +5,6 @@ const router = Router();
 
 // activity
 router.get('/activity', activityRequestController.getList)
-router.post('/activity', activityRequestController.create)
+router.post('/activity', activityRequestController.create);
+router.post("/club/multi", clubRequestController.createMulti);
 module.exports = router;
