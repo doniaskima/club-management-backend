@@ -80,7 +80,8 @@ module.exports.create = async(req, res) => {
         if (userExist.username.includes("admin")) {
             res.status(400).send({
                 error: type == "ask" ?
-                    "unabe to request to join" : "the person cannot be invited",
+                    "unabe to request to join" :
+                    "the person cannot be invited",
             });
             return;
         }
@@ -109,21 +110,27 @@ module.exports.createMulti = async(req, res) => {
         const userExists = await User.find({ _id: { $in: users } });
         userExists.map((uExist) => {
             if (uExist.username.includes("admin")) {
-                res.status(400).send({ error: type === "ask" ? "Cant request to join" : "this person can't be invited" });
+                res.status(400).send({
+                    error: type === "ask" ?
+                        "Cant request to join" :
+                        "this person can't be invited",
+                });
                 return;
             }
         });
-
         const RequestExists = await ClubRequest.find({
             club: club,
             user: { $in: users },
             status: 0,
-        }).populate("user")
+        }).populate("user");
         if (RequestExists.length > 0) {
-            res.status(400).send({ error: type === "ask" ? "requested to join" : `${requestExists[0].user.name} There was a request ` });
+            res.status(400).send({
+                error: type === "ask" ?
+                    "requested to join" :
+                    `${requestExists[0].user.name} There was a request `,
+            });
             return;
         }
-
         let clubRequestArr = [];
         users.map((uid) => {
             clubRequestArr.push({
@@ -139,4 +146,41 @@ module.exports.createMulti = async(req, res) => {
         console.log("ClubRequest Create", err.message);
         res.status(500).send({ error: err.message });
     }
-}
+};
+
+module.exports.updateStatus = async(req, res) => {
+    const requestId = req.params.requestId;
+    const { status } = req.body;
+
+    ClubRequest.findById(requestId, async function(err, doc) {
+        if (err) {
+            res.status(400).send({ error: err.message });
+            return;
+        }
+
+        if (doc.status !== 0) {
+            res.status(400).send({ error: "This invitation has changed !!" });
+            return;
+        }
+        doc.status = status;
+        if (status === 1) {
+            //Accept
+            await userAcceptJoinClubRequest(doc.club, doc.user);
+            await saveLog(doc.club, "member_join", doc.user);
+        } else if (status == 2) {
+            //cancel
+        }
+
+        doc.save().then((result) => {
+            result
+                .populate("sender")
+                .populate("club")
+                .populate("user")
+                .execPopulate()
+                .the((resData) => {
+                    console.log(err);
+                    res.status(500).send({ error: err.message });
+                });
+        });
+    });
+};
