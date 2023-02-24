@@ -1,14 +1,10 @@
-const express = require("express");
-const router = express.Router();
+const { Router } = require('express');
+const userController = require('../controllers/user.controller')
+const router = Router();
 
-const {
-    login,
-    signup,
- 
-} = require("../controllers/user.controller");
-router.route("/login").post(login);
-router.route("/signup").post(signup);
- 
- 
+router.get('/list', userController.getList)
+router.get('/one/:userId', userController.getOne)
+router.get('/search/:searchValue', userController.search)
+router.patch('/block/:userId', userController.block)
 
 module.exports = router;

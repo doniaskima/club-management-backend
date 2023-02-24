@@ -1,100 +1,62 @@
-require("dotenv").config();
-const User = require("../models/user.model");
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
-const { extend } = require("lodash");
+const { ConvertUser, ConvertUsers } = require("../helper/ConvertDataHelper");
+const User = require("../models/User");
+const Buffer = require("buffer").Buffer;
 
+module.exports.getList = (req, res) => {
+    User.find({ username: { $nin: ["admin", "admin0"] } })
+        .then((result) => {
+            res.status(200).send(ConvertUsers(result));
+        })
+        .catch((err) => {
+            res.status(500).json({ error: err.message });
+        });
+};
 
-const login = async(req, res) => {
-    const { email, password } = req.body;
-    const user = await User.findOne({ email: email }).catch((err) => {
-        console.log(err);
-    });
-    if (user) {
-        const isPasswordCorrect = await bcrypt.compare(password, user.password);
-        if (isPasswordCorrect) {
-            const token = jwt.sign({ id: user._id, name: user.name },
-                process.env.JWT_SECRET
-            );
-            return res.json({
-                success: true,
-                message: "Login Successful",
-                user: user,
-                token: token,
-            });
+module.exports.getOne = (req, res) => {
+    const userId = req.params.userId;
+
+    User.findById(userId)
+        .then((result) => {
+            res.status(200).send(ConvertUsers(result));
+        })
+        .catch((err) => {
+            res.status(500).json({ error: err.message });
+        });
+};
+
+module.exports.block = async(req, res) => {
+    const userId = req.params.userId;
+    User.findById(userId, function(err, doc) {
+        if (err) {
+            res.status(500).json({ error: err.message });
+            return;
         }
-        return res.json({
-            token: null,
-            user: null,
-            success: false,
-            message: "Wrong password, please try again",
+        doc.isblocked = !doc.isblocked;
+        doc.save().then((result) => {
+            res.status(200).send(ConvertUser(result));
         });
-    }
-    return res.json({
-        token: null,
-        user: null,
-        success: false,
-        message: "No account found with entered email",
     });
 };
 
-const signup = async(req, res) => {
-    const { name, username, email, password } = req.body;
-    let user = await User.findOne({ email: email }).catch((err) => {
-        console.log(err);
-    });
-    if (user) {
-        return res.json({
-            token: null,
-            user: null,
-            success: false,
-            message: "Account with email already exists, Try logging in instead!",
-        });
-    }
-    user = await User.findOne({ username: username }).catch((err) => {
-        console.log(err);
-    });
-    if (user) {
-        return res.json({
-            token: null,
-            user: null,
-            success: false,
-            message: "Account with username already exists",
-        });
-    }
-    try {
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const newUser = new User({
-            name: name,
-            username: username,
-            email: email,
-            password: hashedPassword,
-            bio: "Hi there!  welcome to Donia's Twitter clone",
-            profileUrl: "https://res.cloudinary.com/formula-web-apps/image/upload/v1623766149/148-1486972_mystery-man-avatar-circle-clipart_kldmy3.jpg",
-        });
+module.exports.search = async(req, res) => {
+    const encodedSearchValue = req.params.searchValue;
+    const buff = Buffer.from(encodedSearchValue, "base64");
+    const searchValue = buff.toString("utf8");
 
-        const savedUser = await newUser.save();
-        const token = jwt.sign({ id: savedUser._id, name: savedUser.name },
-            process.env.JWT_SECRET
-        );
-
-        return res.json({
-            user: savedUser,
-            token: token,
-            success: true,
-            message: "Signed up successfully",
-        });
-    } catch (err) {
-        console.log(err);
-        return res.json({
-            success: false,
-            user: null,
-            token: null,
-            message: err.message,
-        });
-    }
-};
-module.exports = {
-    login,
-    signup,
+    User.find({
+        $and: [
+            { username: { $nin: ["admin", "admin0"] } },
+            {
+                $or: [
+                    { username: { $regex: searchValue } },
+                    { name: { $regex: searchValue } },
+                    { email: { $regex: searchValue } },
+                ],
+            },
+        ],
+    }).then(result => {
+        res.status(200).send(ConvertUsers(result));
+    }).catch(err => {
+        res.status(500).json({ error: err.message })
+    })
 };

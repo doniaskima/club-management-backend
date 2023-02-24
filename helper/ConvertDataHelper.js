@@ -1,6 +1,5 @@
 function ConvertClub(data) {
     let club = {};
-
     club._id = data._id;
     club.name = data.name;
     club.img_url = data.img_url;
