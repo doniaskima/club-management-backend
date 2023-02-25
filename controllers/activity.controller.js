@@ -218,3 +218,66 @@ module.exports.create = (req, res) => {
             res.status(400).json({ error: err.message });
         });
 };
+
+module.exports.createCard = (req, res) => {
+    const { activityId, columnId, title } = req.body;
+
+    const card = new ActivityCard({
+        activity: activityId,
+        title,
+    });
+
+    card
+        .save()
+        .then((newCard) => {
+            Activity.findById(activityId, function(err, doc) {
+                if (err) {
+                    res.status(500).send({ error: "Activity load err - " + err.message });
+                    return;
+                }
+
+                doc.boards.forEach((col) => {
+                    if (col._id.toString() === columnId) {
+                        col.cards.push(newCard._id);
+                    }
+                });
+
+                doc
+                    .save()
+                    .then((result) => {
+                        async.forEach(
+                            result.boards,
+                            function(item, callback) {
+                                ActivityCard.populate(
+                                    item, { path: "cards" },
+                                    function(err, output) {
+                                        if (err) {
+                                            res
+                                                .status(500)
+                                                .send({ error: "Populate err - " + err.message });
+                                            return;
+                                        }
+                                        callback();
+                                    }
+                                );
+                            },
+                            function(err) {
+                                if (err) {
+                                    res
+                                        .status(500)
+                                        .send({ error: "Populate complete err - " + err.message });
+                                    return;
+                                }
+                                res.status(200).send(result);
+                            }
+                        );
+                    })
+                    .catch((err) => {
+                        res.status(500).send({ error: "Save err - " + err.message });
+                    });
+            });
+        })
+        .catch((err) => {
+            res.status(400).json({ error: "Save err - " + err.message });
+        });
+};
