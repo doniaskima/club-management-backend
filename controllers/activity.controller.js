@@ -167,3 +167,54 @@ async function uploadFile(files, public_id) {
         public_id: "",
     };
 }
+
+module.exports.create = (req, res) => {
+    const {
+        club,
+        title,
+        startDate,
+        endDate,
+        joinPoint,
+        configType,
+        configMilestone,
+    } = req.body;
+
+    let boards = [{
+            title: "need to do",
+            cards: [],
+        },
+        {
+            title: "Doing",
+            cards: [],
+        },
+        {
+            title: "Done",
+            cards: [],
+        },
+        {
+            title: "Note",
+            cards: [],
+        },
+    ];
+    const sortedConfigMilestone = configMilestone.sort(
+        (a, b) => a.percentOrQuantity - b.percentOrQuantity
+    );
+    const activity = new Activity({
+        club,
+        title,
+        startDate,
+        endDate,
+        boards,
+        joinPoint,
+        configType,
+        configMilestone: sortedConfigMilestone,
+    });
+    activity
+        .save()
+        .then((result) => {
+            res.status(201).send(result);
+        })
+        .catch((err) => {
+            res.status(400).json({ error: err.message });
+        });
+};
