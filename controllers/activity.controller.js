@@ -281,3 +281,95 @@ module.exports.createCard = (req, res) => {
             res.status(400).json({ error: "Save err - " + err.message });
         });
 };
+
+module.exports.getList = async(req, res) => {
+    const clubId = req.params.clubId;
+    const { inMonth, userId, option } = req.query;
+    const currentDate = moment();
+    const nextMonthDate = moment().add(30, "days");
+    // const nextMonthDate = new Date(currentDate.setMonth(currentDate.getMonth() + 1));
+    let query = { club: clubId };
+    if (inMonth !== undefined) {
+        query = {
+            ...query,
+            $or: [{
+                    startDate: {
+                        $gte: currentDate.toISOString(),
+                        $lte: nextMonthDate.toISOString(),
+                    },
+                },
+                {
+                    endDate: {
+                        $gte: nextMonthDate.toISOString(),
+                    },
+                },
+            ],
+        };
+    }
+    if (option !== undefined) {
+        // console.log(typeof(option))
+        if (option === "0") {
+            // future
+            query = {
+                ...query,
+                startDate: { $gte: currentDate.toISOString() },
+            };
+        } else if (option === "1") {
+            // current
+            query = {
+                ...query,
+                startDate: { $lte: currentDate.toISOString() },
+                endDate: { $gte: currentDate.toISOString() },
+            };
+        } else if (option === "2") {
+            // end not sumary
+            query = {
+                ...query,
+                endDate: { $lt: currentDate.toISOString() },
+                sumary: "",
+            };
+        } else if (option === "3") {
+            // end sumary
+            query = {
+                ...query,
+                endDate: { $lt: currentDate.toISOString() },
+                sumary: { $ne: "" },
+            };
+        }
+    }
+
+    const activities = await Activity.find(query);
+    if (userId !== undefined) {
+        const cloneActivities = JSON.parse(JSON.stringify(activities));
+        const promises = cloneActivities.map(async(activity) => {
+            const requests = await ActivityRequest.find({
+                activity: activity._id,
+                user: userId,
+            });
+            // console.log(request, activity._id)
+            if (!Array.isArray(requests) || !requests.length) {
+                activity.requested = false;
+            } else {
+                // status === 0 => requested = true
+                // status === 1 => remove elm
+                // status === 2 => requested = false
+                requests.map(async(rq) => {
+                    if (rq.status === 0) {
+                        activity.requested = true;
+                    } else if (rq.status === 1) {
+                        activity = null;
+                    } else if (rq.status === 2) {
+                        activity.requested = false;
+                    }
+                });
+            }
+            return activity;
+        });
+        const result = notContainsNullArray(await Promise.all(promises));
+        // console.log(userId, result)
+
+        res.status(200).send(result);
+    } else {
+        res.status(200).send(activities);
+    }
+};
