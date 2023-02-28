@@ -468,3 +468,36 @@ module.exports.search = (req, res) => {
       res.status(500).send({ error: err.message });
     });
 };
+
+module.exports.searchCollaborators = (req, res) => {
+  const activityId = req.params.activityId;
+  const encodedSearchValue = req.params.searchValue;
+  const buff = Buffer.from(encodedSearchValue, "base64");
+  const searchValue = buff.toString("utf8");
+
+  Activity.findyId(activityId)
+    .then((result) => {
+      User.find({
+        $and: [
+          { _id: { $in: result.collaborators } },
+          { username: { $nin: ["admin", "admin0"] } },
+          {
+            $or: [
+              { username: { $regex: searchValue } },
+              { name: { $regex: searchValue } },
+              { email: { $regex: searchValue } },
+            ],
+          },
+        ],
+      })
+        .then((collaborators) => {
+          res.status(200).send(collaborators);
+        })
+        .catch((err) => {
+          res.status(500).send({ error: "User query err - " + err.message });
+        });
+    })
+    .catch((err) => {
+      res.status(500).send({ error: "Activity query err - " + err.message });
+    });
+};
