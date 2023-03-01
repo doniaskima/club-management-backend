@@ -535,3 +535,28 @@ module.exports.searchUsersNotCollaborators = (req, res) => {
             res.status(500).send({ error: err.message });
         });
 };
+
+module.exports.update = (req, res) => {
+    const activityId = req.params.activityId;
+    const { title, startDate, endDate } = req.body;
+
+    Activity.updateOne({ _id: activityId }, {
+            title,
+            startDate,
+            endDate,
+        })
+        .then(() => {
+            Activity.findById(activityId)
+                .then((result) => {
+                    res.status(200).send(result);
+                })
+                .catch((err) => {
+                    res
+                        .status(500)
+                        .send({ error: "Activity result err - " + err.message });
+                });
+        })
+        .catch((err) => {
+            res.status(500).send({ error: "Activity update err - " + err.message });
+        });
+};
