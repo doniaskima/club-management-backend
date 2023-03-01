@@ -560,3 +560,193 @@ module.exports.update = (req, res) => {
             res.status(500).send({ error: "Activity update err - " + err.message });
         });
 };
+
+module.exports.updateBoards = (req, res) => {
+    const activityId = req.params.activityId;
+    const { boards } = req.params;
+
+    Activity.updateOne({ _id: activityId }, { boards })
+        .then(() => {
+            Activity.findById(activityId).then((result) => {
+                async.forEach(
+                    result.boards,
+                    function(item, callback) {
+                        ActivityCard.populate(
+                            item, { path: "cards" },
+                            function(err, output) {
+                                if (err) {
+                                    res.status(500).send({ error: err.message });
+                                    return;
+                                }
+                                callback();
+                            }
+                        );
+                    },
+                    function(err) {
+                        if (err) {
+                            res.status(500).send({ error: err.message });
+                            return;
+                        }
+                        res.status(200).send(result);
+                    }
+                );
+            });
+        })
+        .catch((err) => {
+            res.status(400).json({ error: err.message });
+        });
+};
+
+module.exports.updateColumn = async(req, res) => {
+    const activityId = req.params.activityId;
+    const { column, card } = req.body;
+    //console.log(column, typeof card)
+
+    Activity.findById(activityId, async function(err, doc) {
+        if (err) {
+            res.status(500).send({ error: "Loading err - " + err.message });
+            return;
+        }
+
+        if (card === null) {
+            for (let i = 0; i < doc.boards.length; i++) {
+                if (doc.boards[i]._id.toString() === column._id) {
+                    doc.boards[i].cards = column.cards;
+                }
+            }
+        } else {
+            doc.boards.forEach((col) => {
+                if (col._id.toString() === column._id) {
+                    col.cards = column.cards;
+                } else {
+                    var newCards = col.cards.filter(function(value, index, arr) {
+                        return value._id.toString() !== card._id;
+                    });
+                    col.cards = newCards;
+                }
+            });
+        }
+
+        doc
+            .save()
+            .then((result) => {
+                async.forEach(
+                    result.boards,
+                    function(item, callback) {
+                        ActivityCard.populate(
+                            item, { path: "cards" },
+                            function(err, output) {
+                                if (err) {
+                                    res
+                                        .status(500)
+                                        .send({ error: "Populate err - " + err.message });
+                                    return;
+                                }
+                                callback();
+                            }
+                        );
+                    },
+                    function(err) {
+                        if (err) {
+                            res
+                                .status(500)
+                                .send({ error: "Populate complete err - " + err.message });
+                            return;
+                        }
+                        res.status(200).send(result);
+                    }
+                );
+            })
+            .catch((err) => {
+                res.status(500).send({ error: "Save err - " + err.message });
+            });
+    });
+};
+
+module.exports.updateCollaborators = (req, res) => {
+    const activityId = req.params.activityId;
+    const { collaborators } = req.body;
+
+    Activity.updateOne({ _id: activityId }, { $pull: { collaborators: { $in: collaborators } } })
+        .then(() => {
+            res.status(200).send();
+        })
+        .catch((err) => {
+            res.status(500).send({ error: "Activity update err - " + err.message });
+        });
+};
+
+module.exports.addCollaborators = (req, res) => {
+    const activityId = req.params.activityId;
+    const { users } = req.body;
+    Activity.updateOne({ _id: activityId }, { $push: { collaborators: { $each: users } } })
+        .then(() => {
+            req.status(200).send();
+        })
+        .catch((err) => {
+            res.status(500).send({ error: "Activity update err - " + err.message });
+        });
+};
+
+module.exports.deleteAllCards = async(req, res) => {
+    try {
+        const activityId = req.params.activityId;
+        const { columnId } = req.body;
+
+        let activity = await Activity.findById(activityId);
+        let listCardId = [];
+        activity.boards.forEach((column) => {
+            if (column._id.toString() === columnId) {
+                listCardId = JSON.parse(JSON.stringify(column.cards));
+                column.cards = [];
+            }
+        });
+
+        async.forEach(
+            listCardId,
+            async function(item, callback) {
+                let card = await ActivityCard.findById(item);
+
+                card.remove().then(() => {
+                    if (typeof callback === "function") {
+                        return callback();
+                    }
+                });
+            },
+            function(err) {
+                if (err) {
+                    res
+                        .status(500)
+                        .send({ error: "Card deleted err - " + err.message });
+                    return;
+                }
+                activity.save().then((result) => {
+                    async.forEach(
+                        result.boards,
+                        function(item, callback) {
+                            ActivityCard.populate(
+                                item, { path: "cards" },
+                                function(err, output) {
+                                    if (err) {
+                                        res.status(500).send({ error: err.message });
+                                        return;
+                                    }
+                                    callback();
+                                }
+                            );
+                        },
+                        function(err) {
+                            if (err) {
+                                res.status(500).send({ error: err.message });
+                                return;
+                            }
+                            res.status(200).send(result);
+                        }
+                    );
+                });
+            }
+        );
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+}

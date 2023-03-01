@@ -13,6 +13,7 @@ const app = express();
 
 //Routes 
 const clubRoutes = require("./routes/club.route");
+const activityRoutes = require("./routes/activityRoutes");
 
 
 
@@ -37,6 +38,7 @@ app.use(cookieParser());
 
 //usee Routes
 app.use("/club", clubRoutes);
+app.use("/activity", activityRoutes);
 
 app.get("/", (req, res) => {
     return res.send({ message: "Welcome :D" });
