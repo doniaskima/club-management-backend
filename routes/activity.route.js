@@ -12,5 +12,15 @@ router.get('/usersnotcollaborators/:activityId', activityController.getUsersNotC
 router.get('/search/:clubId/:searchValue', activityController.search)
 router.get('/searchcollaborators/:activityId/:searchValue', activityController.searchCollaborators)
 router.get('/searchusersnotcollaborators/:activityId/:searchValue', activityController.searchUsersNotCollaborators)
+router.patch("/updatecolumn/:activityId", activityController.updateColumn);
+router.patch(
+    "/updatecollaborators/:activityId",
+    activityController.updateCollaborators
+);
+router.patch(
+    "/addcollaborators/:activityId",
+    activityController.addCollaborators
+);
+router.patch("/deleteallcards/:activityId", activityController.deleteAllCards);
 
 module.exports = router;
