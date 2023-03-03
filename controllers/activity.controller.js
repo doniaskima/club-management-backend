@@ -856,3 +856,23 @@ module.exports.upload = async(req, res) => {
             res.status(500).json({ error: "Update card err - " + err.message });
         });
 };
+
+module.exports.addComment = async(req, res) => {
+    try {
+        const { cardId, content, author } = req.body;
+        let now = Date.now();
+        let card = await ActivityCard.findById(cardId);
+        const comment = {
+            content,
+            createdAt: now,
+            author,
+        };
+
+        card.comments.push(comment);
+        card.save().then((result) => {
+            res.status(200).send(result);
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+}
