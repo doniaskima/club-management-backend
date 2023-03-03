@@ -836,23 +836,23 @@ module.exports.userJoin = (req, res) => {
         });
 }
 
-module.exports.upload = async (req, res) => {
-  const files = req.files;
-  const { cardId } = req.body;
+module.exports.upload = async(req, res) => {
+    const files = req.files;
+    const { cardId } = req.body;
 
-  const uploadData = await uploadFile(files, "");
-  //console.log(uploadData)
-  ActivityCard.updateOne({ _id: cardId }, { $push: { files: uploadData } })
-    .then(() => {
-      ActivityCard.findById(cardId)
-        .then((result) => {
-          res.status(200).send(result);
+    const uploadData = await uploadFile(files, "");
+    //console.log(uploadData)
+    ActivityCard.updateOne({ _id: cardId }, { $push: { files: uploadData } })
+        .then(() => {
+            ActivityCard.findById(cardId)
+                .then((result) => {
+                    res.status(200).send(result);
+                })
+                .catch((err) => {
+                    res.status(500).json({ error: "Result err - " + err.message });
+                });
         })
         .catch((err) => {
-          res.status(500).json({ error: "Result err - " + err.message });
+            res.status(500).json({ error: "Update card err - " + err.message });
         });
-    })
-    .catch((err) => {
-      res.status(500).json({ error: "Update card err - " + err.message });
-    });
 };
