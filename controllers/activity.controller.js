@@ -926,3 +926,25 @@ module.exports.getCard = (req, res) => {
             res.status(500).send({ error: err.message });
         });
 };
+
+module.exports.userExist = async(req, res) => {
+    try {
+        const cardId = req.params.cardId;
+        const { userId } = req.body;
+        let card = await ActivityCard.findById(cardId);
+
+        const newUserJoin = card.userJoin.filter(
+            (uid) => uid.toString() !== userId
+        );
+
+        card.userJoin = newUserJoin;
+
+        card.save().then((result) => {
+            res
+                .status(200)
+                .send({ message: "error", success: true });
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+}
