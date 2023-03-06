@@ -1009,3 +1009,23 @@ module.exports.updateCardDescription = (req, res) => {
             res.status(500).json({ error: "Update card err - " + err.message });
         });
 };
+
+module.exports.deleteComment = async(req, res) => {
+    try {
+        const cardId = req.params.cardId;
+        const { commentId } = req.body;
+        let card = await ActivityCard.findById(cardId);
+
+        const newComments = card.comments.filter(
+            (comment) => comment._id.toString() !== commentId
+        );
+
+        card.comments = newComments;
+
+        card.save().then((result) => {
+            res.status(200).send(result);
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
