@@ -938,7 +938,6 @@ module.exports.userExist = async(req, res) => {
         const newUserJoin = card.userJoin.filter(
             (uid) => uid.toString() !== userId
         );
-
         card.userJoin = newUserJoin;
 
         card.save().then((result) => {
@@ -948,3 +947,46 @@ module.exports.userExist = async(req, res) => {
         res.status(500).json({ error: err.message });
     }
 };
+
+module.exports.userExitCard = async(req, res) => {
+    try {
+        const cardId = req.params.cardId;
+        const { userId } = req.body;
+        let card = await ActivityCard.findById(cardId);
+
+        const newUserJoin = card.userJoin.filter(
+            (uid) => uid.toString() !== userId
+        );
+
+        card.userJoin = newUserJoin;
+
+        card.save().then((result) => {
+            res
+                .status(200)
+                .send({ message: "Successuflly removed from the card!", success: true });
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+}
+
+module.exports.groupExitCard = async(req, res) => {
+    try {
+        const cardId = req.params.cardId;
+        const { groupId } = req.body;
+        let card = await ActivityCard.findById(cardId);
+
+        const newGroupJoin = card.groupJoin.filter(
+            (gid) => gid.toString() !== groupId
+        );
+        card.groupJoin = newGroupJoin;
+
+        card.save().then((result) => {
+            res
+                .status(200)
+                .send({ message: "Succefully removed from the card !", success: true });
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+}

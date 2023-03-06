@@ -8,10 +8,19 @@ router.post("/createcard", activityController.createCard);
 router.get("/list/:clubId", activityController.getList);
 router.get("/one/:activityId", activityController.getOne);
 router.get("/collaborators/:activityId", activityController.getCollaborators);
-router.get('/usersnotcollaborators/:activityId', activityController.getUsersNotCollaborators)
-router.get('/search/:clubId/:searchValue', activityController.search)
-router.get('/searchcollaborators/:activityId/:searchValue', activityController.searchCollaborators)
-router.get('/searchusersnotcollaborators/:activityId/:searchValue', activityController.searchUsersNotCollaborators)
+router.get(
+    "/usersnotcollaborators/:activityId",
+    activityController.getUsersNotCollaborators
+);
+router.get("/search/:clubId/:searchValue", activityController.search);
+router.get(
+    "/searchcollaborators/:activityId/:searchValue",
+    activityController.searchCollaborators
+);
+router.get(
+    "/searchusersnotcollaborators/:activityId/:searchValue",
+    activityController.searchUsersNotCollaborators
+);
 router.patch("/updatecolumn/:activityId", activityController.updateColumn);
 router.patch(
     "/updatecollaborators/:activityId",
