@@ -1029,3 +1029,25 @@ module.exports.deleteComment = async(req, res) => {
         res.status(500).json({ error: err.message });
     }
 };
+
+module.exports.deleteFile = async(req, res) => {
+    try {
+        const cardId = req.params.cardId;
+        const { public_id } = req.body;
+        await cloudinary.uploader.destroy(public_id, function(result) {
+            console.log("destroy image", result);
+        });
+
+        let card = await ActivityCard.findById(cardId);
+
+        const newFiles = card.files.filter((file) => file.public_id !== public_id);
+
+        card.files = newFiles;
+
+        card.save().then((result) => {
+            res.status(200).send(result);
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+}
