@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 
 
-const activityRequestSchema = newmongoose.Schema({
+const activityRequestSchema = new mongoose.Schema({
     club: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "club",

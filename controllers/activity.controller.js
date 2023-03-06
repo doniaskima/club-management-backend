@@ -6,7 +6,7 @@ const ActivityPoint = require("../models/ActivityPoint");
 const User = require("../models/user.model");
 const Group = require("../models/Group");
 const cloudinary = require("../helper/Cloudinary");
-const fs = resquire("fs");
+const fs = require("fs");
 const async = require("async");
 const Buffer = require("buffer");
 const moment = require("moment");
@@ -818,7 +818,9 @@ module.exports.userJoin = (req, res) => {
             // }
             //check user joined?
             if (isUserJoined(userId, card)) {
-                res.status(200).send({ message: "U have participated ", success: false });
+                res
+                    .status(200)
+                    .send({ message: "U have participated ", success: false });
             } else {
                 ActivityCard.updateOne({ _id: cardId }, { $push: { userJoin: userId } })
                     .then(() => {
@@ -834,7 +836,7 @@ module.exports.userJoin = (req, res) => {
         .catch((err) => {
             res.status(500).json({ error: "Query card err - " + err.message });
         });
-}
+};
 
 module.exports.upload = async(req, res) => {
     const files = req.files;
@@ -875,7 +877,7 @@ module.exports.addComment = async(req, res) => {
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
-}
+};
 
 module.exports.getCard = (req, res) => {
     const cardId = req.params.cardId;
@@ -940,11 +942,9 @@ module.exports.userExist = async(req, res) => {
         card.userJoin = newUserJoin;
 
         card.save().then((result) => {
-            res
-                .status(200)
-                .send({ message: "error", success: true });
+            res.status(200).send({ message: "error", success: true });
         });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
-}
+};
