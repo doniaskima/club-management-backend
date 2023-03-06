@@ -3,7 +3,7 @@ const ActivityCard = require("../models/ActivityCard");
 const ActivityRequest = require("../models/ActivityRequest");
 const Point = require("../models/Point");
 const ActivityPoint = require("../models/ActivityPoint");
-const User = require("../models/User");
+const User = require("../models/user.model");
 const Group = require("../models/Group");
 const cloudinary = require("../helper/Cloudinary");
 const fs = resquire("fs");
@@ -876,3 +876,53 @@ module.exports.addComment = async(req, res) => {
         res.status(500).json({ error: err.message });
     }
 }
+
+module.exports.getCard = (req, res) => {
+    const cardId = req.params.cardId;
+
+    ActivityCard.findById(cardId)
+        .populate("userJoin")
+        .populate("groupJoin")
+        .then((result) => {
+            async.forEach(
+                result.comments,
+                function(item, callback) {
+                    User.populate(item, { path: "author" }, function(err, output) {
+                        if (err) {
+                            res.status(500).send({ error: err.message });
+                            return;
+                        }
+                        callback();
+                    });
+                },
+                function(err) {
+                    if (err) {
+                        res.status(500).send({ error: err.message });
+                        return;
+                    }
+                    async.forEach(
+                        result.groupJoin,
+                        function(group, next) {
+                            User.populate(group, { path: "members" }, function(error, out) {
+                                if (error) {
+                                    res.status(500).send({ error: error.message });
+                                    return;
+                                }
+                                next();
+                            });
+                        },
+                        function(err) {
+                            if (err) {
+                                res.status(500).send({ error: err.message });
+                                return;
+                            }
+                            res.status(200).send(result);
+                        }
+                    );
+                }
+            );
+        })
+        .catch((err) => {
+            res.status(500).send({ error: err.message });
+        });
+};
