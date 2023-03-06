@@ -990,3 +990,22 @@ module.exports.groupExitCard = async(req, res) => {
         res.status(500).json({ error: err.message });
     }
 }
+
+module.exports.updateCardDescription = (req, res) => {
+    const cardId = req.params.cardId;
+    const { description } = req.body;
+
+    ActivityCard.updateOne({ _id: cardId }, { description })
+        .then(() => {
+            ActivityCard.findById(cardId)
+                .then((result) => {
+                    res.status(200).send(result);
+                })
+                .catch((err) => {
+                    res.status(500).json({ error: "Result err - " + err.message });
+                });
+        })
+        .catch((err) => {
+            res.status(500).json({ error: "Update card err - " + err.message });
+        });
+};
